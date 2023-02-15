@@ -13,6 +13,9 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 
+cpu = th.device('cpu')
+gpu = th.device("mps")
+
 #数据准备
 x=th.linspace(0,10,50).reshape(50)
 y=0.1*(x-5)**3+0.12*x**2-x+3# + 3*(th.rand_like(x)-0.5)
@@ -26,23 +29,27 @@ plt.show()
 
 #网略构建
 net = nn.Sequential(
-    nn.Linear(1,100),
+    nn.Linear(1,10),
     nn.Tanh(),
-    nn.Linear(100,200),
+    nn.Linear(10,20),
     nn.Tanh(),
-    nn.Linear(200,1)
+    nn.Linear(20,1)
 )
 loss_fn = nn.MSELoss()
 
-opt=optim.SGD(params=net.parameters(),lr=1e-2)
+opt=optim.Adam(params=net.parameters(),lr=1e-2)
 
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(opt, mode='min', factor=0.5, patience=10, verbose=False, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=1e-8, eps=1e-08)
 
 
 for epoch in range(100000):
     opt.zero_grad()
-    yp=net(x.reshape(1,50,1))
-    loss=loss_fn(yp,y.reshape(1,50,1))
+    nx=x.reshape(1,50,1)
+    nx.to(gpu)
+    yp=net(nx)
+    yt=y.reshape(1,50,1)
+    yt.to(gpu)
+    loss=loss_fn(yp,yt)
     scheduler.step(loss)
     loss.backward()
     #梯度截断
