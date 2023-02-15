@@ -35,10 +35,24 @@ net = nn.Sequential(
     nn.Tanh(),
     nn.Linear(20,1)
 )
-loss_fn = nn.MSELoss()
+
+#自定义loss_fun
+class CustomLoss(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(self,x,y):
+        loss = th.sqrt(th.mean((x-y)**2))
+        return loss
+
+
+# loss_fn = nn.MSELoss()
+
+loss_fn = CustomLoss()
 
 opt=optim.Adam(params=net.parameters(),lr=1e-2)
 
+#这是一个学习率计划，动态调节学习率
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(opt, mode='min', factor=0.5, patience=10, verbose=False, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=1e-8, eps=1e-08)
 
 
@@ -55,8 +69,7 @@ for epoch in range(100000):
     #梯度截断
     th.nn.utils.clip_grad.clip_grad_norm(net.parameters(),100)
     opt.step()
-    
-    
+
     if epoch%50==0:
         print(f'epoch = {epoch}  loss = {th.sum(loss)}')
         ny = net(x.reshape(1,50,1))
