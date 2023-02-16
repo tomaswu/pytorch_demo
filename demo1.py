@@ -4,7 +4,7 @@
     @Author  :   Tomas
     @Version :   1.0
     @Contact :   tomaswu@qq.com
-    Desc     :    牛刀杀鸡，回归一个三元方程
+    Desc     :    牛刀杀鸡，回归一个三次方程
 '''
 
 import torch as th
@@ -12,9 +12,14 @@ import matplotlib.pyplot as plt
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
+import tqdm
 
-cpu = th.device('cpu')
-gpu = th.device("mps")
+if th.has_mps:
+    device=th.device('mps')
+elif th.cuda.is_available():
+    device=th.device('cuda')
+else:
+    device =th.device('cpu')
 
 #数据准备
 x=th.linspace(0,10,50).reshape(50)
@@ -55,26 +60,26 @@ opt=optim.Adam(params=net.parameters(),lr=1e-2)
 #这是一个学习率计划，动态调节学习率
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(opt, mode='min', factor=0.5, patience=10, verbose=False, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=1e-8, eps=1e-08)
 
+with tqdm.trange(10000,colour='#1055aa') as t:
+    for epoch in t:
+        opt.zero_grad()
+        nx=x.reshape(1,50,1)
+        nx.to(device)
+        yp=net(nx)
+        yt=y.reshape(1,50,1)
+        yt.to(device)
+        loss=loss_fn(yp,yt)
+        scheduler.step(loss)
+        loss.backward()
+        #梯度截断
+        th.nn.utils.clip_grad.clip_grad_norm(net.parameters(),100)
+        opt.step()
 
-for epoch in range(100000):
-    opt.zero_grad()
-    nx=x.reshape(1,50,1)
-    nx.to(gpu)
-    yp=net(nx)
-    yt=y.reshape(1,50,1)
-    yt.to(gpu)
-    loss=loss_fn(yp,yt)
-    scheduler.step(loss)
-    loss.backward()
-    #梯度截断
-    th.nn.utils.clip_grad.clip_grad_norm(net.parameters(),100)
-    opt.step()
-
-    if epoch%50==0:
-        print(f'epoch = {epoch}  loss = {th.sum(loss)}')
-        ny = net(x.reshape(1,50,1))
-        lines[0].set_data(x.detach().numpy(),ny.detach().numpy())
-        plt.pause(0.02)
+        if epoch%50==0:
+            t.set_description_str(f'loss = {th.sum(loss):.3e}')
+            ny = net(x.reshape(1,50,1))
+            lines[0].set_data(x.detach().numpy(),ny.detach().numpy())
+            plt.pause(0.02)
 
 print('train finished!')
 plt.ioff()
