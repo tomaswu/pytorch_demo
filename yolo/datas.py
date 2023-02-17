@@ -6,21 +6,16 @@
     @Contact :   tomaswu@qq.com
     Desc     :    
 '''
-# -*- encoding: utf-8 -*-
-'''
-    @Time    :   2023/02/16 08:41:32
-    @Author  :   Tomas
-    @Version :   1.0
-    @Contact :   tomaswu@qq.com
-    Desc     :    
-'''
+import sys,os
+sys.path.append(".")
 
 import torch as th
 import torch.utils.data as tudata
 from PIL import Image,ImageFile
 import numpy as np
-import os,json
+import json
 import cv2
+from tomas_utils import *
 
 ImageFile.LOAD_TRUNCATED_IMAGES=True
 
@@ -47,7 +42,8 @@ class COCO(tudata.Dataset):
         self.version=version
         self.cf=cf
         self.readinfo()
-        
+
+   
     def readinfo(self):
         assert self.cf in ['train','val']
         jsonpath = os.path.join(self.__cocopath,f'annotations/instances_{self.cf}{self.version}.json')
