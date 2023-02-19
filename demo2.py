@@ -33,8 +33,8 @@ def padTo(img:np.ndarray,size,rects=None):
     new_image = np.zeros([nh,nw],'uint8')
     new_image[:h,:w]=img
     bbox=[]
-    # if rects:
-    #     bbox=
+    if rects:
+        bbox=[]
     return new_image,bbox
 
 
@@ -45,16 +45,18 @@ def collate(batch):
     return arr
 
 coco = COCO(coco_path,cf,coco_version)
-dataloader = tudata.DataLoader(coco,100,shuffle=True,num_workers=0,drop_last=False,collate_fn=collate)
+dataloader = tudata.DataLoader(coco,20,shuffle=True,num_workers=0,drop_last=False,collate_fn=collate)
 if __name__=='__main__':
-    import multiprocessing
-    multiprocessing.freeze_support()
-    import tqdm
-    bar=tqdm.trange(len(coco))
-    m=0
-    for data in dataloader:
-        imgs = data
-        for i in imgs:
-            imshow(i,wait=10)
-            bar.update()
+    # import multiprocessing
+    # multiprocessing.freeze_support()
+    # import tqdm
+    # bar=tqdm.trange(len(coco),colour='#ff55cc')
+    # m=0
+    # for data in dataloader:
+    #     imgs = data
+    #     for i in imgs:
+    #         imshow(i,wait=100)
+    #         bar.update()
+    c=coco.annotations['categories']
+    print(len(c))       
     
